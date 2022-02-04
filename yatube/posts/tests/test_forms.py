@@ -71,7 +71,8 @@ class PostCreateFormTests(TestCase):
         )
         form_data = {
             'text': 'Тестовый текст о важном',
-            'group': self.group.id
+            'group': self.group.id,
+            'image': uploaded,
         }
         response = self.author_client.post(
             reverse('posts:post_create'),
