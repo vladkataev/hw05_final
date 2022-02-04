@@ -45,7 +45,7 @@ class PostCreateFormTests(TestCase):
             post=cls.post,
             author=cls.user,
             text='Молодец пиши ещё!'
-        )    
+        )
 
     def setUp(self):
         self.guest_client = Client()

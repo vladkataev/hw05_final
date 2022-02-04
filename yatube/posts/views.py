@@ -137,7 +137,7 @@ def add_comment(request, post_id):
 @login_required
 def follow_index(request):
     posts = Post.objects.filter(author__following__user=request.user)
-    template = 'posts/follow.html'    
+    template = 'posts/follow.html'
     context = get_page_context(posts.all(), request)
     return render(request, template, context)
 

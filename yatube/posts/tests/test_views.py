@@ -345,11 +345,12 @@ class FollowTest(TestCase):
 
     def test_new_post_followers(self):
         """Новый пост автора появляется в ленте у подписчиков"""
+        count_posts = Post.objects.count()
         response = self.authorized_client2.get(
             reverse('posts:follow_index')
         )
         old_context = response.context['page_obj']
-        self.assertEqual(len(old_context), 1)
+        self.assertEqual(len(old_context), count_posts)
         self.assertEqual(old_context[0], self.post1)
         post2 = Post.objects.create(
             author=self.author,
@@ -359,7 +360,7 @@ class FollowTest(TestCase):
             reverse('posts:follow_index')
         )
         new_context = response.context['page_obj']
-        self.assertEqual(len(new_context), 2)
+        self.assertEqual(len(new_context), count_posts + 1)
         self.assertEqual(new_context[0], post2)
 
     def test_no_new_post_unfollowers(self):
