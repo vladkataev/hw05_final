@@ -87,7 +87,7 @@ class PostCreateFormTests(TestCase):
                 text='Тестовый текст о важном',
                 author=self.user,
                 group=self.group.id,
-                image='posts/small.gif'
+                image=self.post.image
             ).exists()
         )
 
