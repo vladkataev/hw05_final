@@ -86,7 +86,8 @@ class PostCreateFormTests(TestCase):
             Post.objects.filter(
                 text='Тестовый текст о важном',
                 author=self.user,
-                group=self.group.id
+                group=self.group.id,
+                image='posts/small.gif'
             ).exists()
         )
 
