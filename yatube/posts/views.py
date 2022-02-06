@@ -13,7 +13,7 @@ def get_page_context(queryset, request):
     paginator = Paginator(queryset, COUNT_POSTS)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    return {        
+    return {
         'page_obj': page_obj,
     }
 
@@ -29,10 +29,9 @@ def index(request):
 def group_posts(request, slug):
     """Шаблон с группами постов"""
     group = get_object_or_404(Group, slug=slug)
-    posts = group.posts.all()
     template = 'posts/group_list.html'
     context = {
-        'group': group,        
+        'group': group,
     }
     context.update(get_page_context(group.posts.all(), request))
     return render(request, template, context)
@@ -73,7 +72,6 @@ def post_detail(request, post_id):
 @login_required
 def post_create(request):
     """Шаблон создания поста"""
-    groups = Group.objects.all()
     template = 'posts/create_post.html'
     form = PostForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
@@ -82,7 +80,7 @@ def post_create(request):
         post.save()
         return redirect('posts:profile', username=request.user)
     context = {
-        'form': form,        
+        'form': form,
     }
     return render(request, template, context)
 
@@ -91,7 +89,6 @@ def post_create(request):
 def post_edit(request, post_id):
     """Шаблон редактирования поста"""
     post = get_object_or_404(Post, pk=post_id)
-    groups = Group.objects.all()
     template = 'posts/create_post.html'
     if post.author == request.user:
         form = PostForm(
@@ -107,7 +104,7 @@ def post_edit(request, post_id):
         context = {
             'form': form,
             'post': post,
-            'is_edit': True,            
+            'is_edit': True,
         }
         return render(request, template, context)
     return redirect('posts:post_detail', post_id=post_id)
