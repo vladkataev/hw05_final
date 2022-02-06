@@ -2,7 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.cache import cache_page
-from .models import User, Post, Group, Follow
+from .models import Follow, Group, Post, User
 from .forms import PostForm, CommentForm
 
 
@@ -13,9 +13,7 @@ def get_page_context(queryset, request):
     paginator = Paginator(queryset, COUNT_POSTS)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    return {
-        'paginator': paginator,
-        'page_number': page_number,
+    return {        
         'page_obj': page_obj,
     }
 
@@ -34,8 +32,7 @@ def group_posts(request, slug):
     posts = group.posts.all()
     template = 'posts/group_list.html'
     context = {
-        'group': group,
-        'posts': posts,
+        'group': group,        
     }
     context.update(get_page_context(group.posts.all(), request))
     return render(request, template, context)
@@ -45,11 +42,7 @@ def profile(request, username):
     """Шаблон профайла пользователя"""
     user = get_object_or_404(User, username=username)
     template = 'posts/profile.html'
-    if request.user.is_authenticated:
-        following = Follow.objects.filter(
-            user=request.user, author=user)
-    else:
-        following = False
+    following = user.is_authenticated and user.following.exists()
     context = {
         'author': user,
         'count_posts': user.posts.count(),
@@ -89,8 +82,7 @@ def post_create(request):
         post.save()
         return redirect('posts:profile', username=request.user)
     context = {
-        'form': form,
-        'groups': groups
+        'form': form,        
     }
     return render(request, template, context)
 
@@ -115,8 +107,7 @@ def post_edit(request, post_id):
         context = {
             'form': form,
             'post': post,
-            'is_edit': True,
-            'groups': groups
+            'is_edit': True,            
         }
         return render(request, template, context)
     return redirect('posts:post_detail', post_id=post_id)
@@ -154,6 +145,5 @@ def profile_follow(request, username):
 def profile_unfollow(request, username):
     author = get_object_or_404(User, username=username)
     unfollowing = get_object_or_404(Follow, user=request.user, author=author)
-    if request.method != 'POST':
-        unfollowing.delete()
+    unfollowing.delete()
     return redirect('posts:profile', author)
