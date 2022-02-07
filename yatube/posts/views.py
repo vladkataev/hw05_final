@@ -3,7 +3,7 @@ from django.core.paginator import Paginator
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.cache import cache_page
 from .models import Follow, Group, Post, User
-from .forms import PostForm, CommentForm
+from .forms import CommentForm, PostForm
 
 
 COUNT_POSTS: int = 10  # число выводимых постов
@@ -141,6 +141,6 @@ def profile_follow(request, username):
 @login_required
 def profile_unfollow(request, username):
     author = get_object_or_404(User, username=username)
-    unfollowing = get_object_or_404(Follow, user=request.user, author=author)
+    unfollowing = Follow.objects.filter(user=request.user, author=author)
     unfollowing.delete()
     return redirect('posts:profile', author)

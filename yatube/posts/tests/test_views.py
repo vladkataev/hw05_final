@@ -1,16 +1,27 @@
+import shutil
+import tempfile
+
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase, Client
+from django.test import Client, override_settings, TestCase
 from django.urls import reverse
 from django import forms
 from posts.models import Comment, Follow, Group, Post
 from posts.views import COUNT_POSTS
 
 User = get_user_model()
+TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
 
+@override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
 class PostURLTests(TestCase):
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        shutil.rmtree(TEMP_MEDIA_ROOT, ignore_errors=True)
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -50,10 +61,10 @@ class PostURLTests(TestCase):
         self.authorized_client.force_login(self.user)
         self.author_client = Client()
         self.author_client.force_login(self.user)
+        cache.clear()
 
     def test_posts_pages_uses_correct_template(self):
         """URL-адрес использует соответствующий шаблон."""
-        cache.clear()
         templates_pages_names = {
             reverse('posts:index'): 'posts/index.html',
             reverse('posts:post_create'): 'posts/create_post.html',
@@ -77,7 +88,6 @@ class PostURLTests(TestCase):
 
     def test_post_index_page_show_correct_context(self):
         """Шаблон post:index сформирован с правильным контекстом"""
-        cache.clear()
         response = self.guest_client.get(reverse('posts:index'))
         object = response.context['page_obj'][0]
         context_objects = {
@@ -217,6 +227,7 @@ class CommentsViewsTest(TestCase):
         self.guest_client = Client()
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
+        cache.clear()
 
     def test_post_detail_contains_comment(self):
         """Комментарий появляется на странице поста."""
@@ -274,14 +285,13 @@ class CacheTest(TestCase):
 
     def test_cache_index_page(self):
         """Проверка кеширования главной страницы"""
-        response = self.author_client.get(reverse('posts:index'))
-        count_posts = Post.objects.count()
-        self.assertEqual(len(response.context['page_obj']), count_posts)
+        cache1 = self.author_client.get(reverse('posts:index')).content
         self.post.delete()
+        cache2 = self.author_client.get(reverse('posts:index')).content
+        self.assertEqual(cache1, cache2)
         cache.clear()
-        response2 = self.author_client.get(reverse('posts:index'))
-        self.assertNotEqual(len(response.context['page_obj']), len(
-            response2.context['page_obj']))
+        cache3 = self.author_client.get(reverse('posts:index')).content
+        self.assertNotEqual(cache2, cache3)
 
 
 class FollowTest(TestCase):
@@ -321,11 +331,10 @@ class FollowTest(TestCase):
             reverse('posts:profile', kwargs={'username': 'Author'})
         )
         self.assertEqual(Follow.objects.count(), follow_count + 1)
-        self.assertEqual(
-            Follow.objects.get(id=2).author, self.author
-        )
-        self.assertEqual(
-            Follow.objects.get(id=2).user, self.user1
+        self.assertTrue(
+            Follow.objects.filter(
+                user=self.user1, author=self.author
+            ).exists()
         )
 
     def test_auth_unfollow(self):

@@ -17,7 +17,10 @@ class Group(models.Model):
 
 
 class Post(models.Model):
-    text = models.TextField()
+    text = models.TextField(
+        verbose_name='Текст поста',
+        help_text='Tекст нового поста.'
+    )
     pub_date = models.DateTimeField(auto_now_add=True)
     author = models.ForeignKey(
         User,
@@ -29,11 +32,15 @@ class Post(models.Model):
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
-        related_name='posts'
+        related_name='posts',
+        verbose_name='Группа',
+        help_text='Группа, к которой будет относиться пост.'
     )
     image = models.ImageField(
         upload_to='posts/',
         blank=True,
+        verbose_name='Картинка',
+        help_text='Картина для поста.'
     )
 
     def __str__(self):
@@ -72,3 +79,10 @@ class Follow(models.Model):
         on_delete=models.CASCADE,
         related_name='following',
     )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'author'],
+                name='user_and_author_unique_together')
+        ]
